@@ -1,5 +1,7 @@
 import os
-
+from app.core.config import settings
+from sqlalchemy import text
+from app.database.connection import engine
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, RedirectResponse
 from dotenv import load_dotenv
@@ -11,10 +13,27 @@ app = FastAPI(
     description="API responsável pela integração entre o MarketScope e Marketplaces.",
     version="0.2.0"
 )
+@app.on_event("startup")
+async def startup():
 
-CLIENT_ID = os.getenv("MERCADOLIVRE_CLIENT_ID")
-REDIRECT_URI = os.getenv("MERCADOLIVRE_REDIRECT_URI")
+    try:
+        with engine.connect() as connection:
 
+            connection.execute(text("SELECT 1"))
+
+            print("========================================")
+            print("Conectado ao PostgreSQL com sucesso!")
+            print("========================================")
+
+    except Exception as error:
+
+        print("========================================")
+        print("Erro ao conectar ao PostgreSQL")
+        print(error)
+        print("========================================")
+
+CLIENT_ID = settings.mercadolivre_client_id
+REDIRECT_URI = settings.mercadolivre_redirect_uri
 
 @app.get("/")
 async def root():
